@@ -20,6 +20,7 @@ def send_message(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
 
 def get_messages(request, recipient):
-    messages = Message.objects.filter(recipient=recipient)
-    return JsonResponse({'messages': list(messages.values())})
+    if request.method == 'GET':
+        messages = Message.objects.filter(recipient=recipient).values('sender', 'recipient', 'content', 'timestamp')
+        return JsonResponse(list(messages), safe=False)
 
