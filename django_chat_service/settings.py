@@ -9,24 +9,26 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
+from dotenv import load_dotenv
 from pathlib import Path
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-brw2f9e!)^mb73v9jlfsrz#t-v9h4z5bx47lvyq0#7_!zks9=o'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 # Application definition
 
@@ -37,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'messaging',
+    'messaging',  # Assuming this is your messaging app
     'rest_framework',
     'channels',
 ]
@@ -70,19 +72,28 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django_chat_service.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
+# Channels and ASGI configuration for real-time messaging
+ASGI_APPLICATION = 'django_chat_service.asgi.application'
+CHANNEL_LAYERS = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379')],
+        },
+    },
 }
 
+# Database
+# MongoDB configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': os.getenv('MONGODB_NAME', 'test'),
+        'CLIENT': {
+            'host': os.getenv('MONGODB_URI'),
+        },
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -102,7 +113,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -113,7 +123,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
