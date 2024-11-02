@@ -1,8 +1,7 @@
-# messaging/serializers.py
 from rest_framework import serializers
-from .models import ChatMessage  # Your ChatMessage model
+from .models import Message
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ChatMessage
-        fields = ['id', 'room_name', 'sender', 'message', 'timestamp']
+        model = Message
+        fields = ['chat', 'sender', 'content', 'timestamp', 'status']

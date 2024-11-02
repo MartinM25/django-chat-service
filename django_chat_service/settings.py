@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from pymongo import MongoClient
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'messaging',  # Assuming this is your messaging app
+    'messaging',
     'rest_framework',
     'channels',
 ]
@@ -83,17 +84,10 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Database
 # MongoDB configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': os.getenv('MONGODB_NAME', 'test'),
-        'CLIENT': {
-            'host': os.getenv('MONGODB_URI'),
-        },
-    }
-}
+MONGODB_URI = os.getenv('MONGODB_URI')
+client = MongoClient(MONGODB_URI)
+db = client["test-database"]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

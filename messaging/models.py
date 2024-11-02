@@ -1,19 +1,56 @@
-from django.db import models
-from django.contrib.auth.models import User
+import datetime
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import os
+from dotenv import load_dotenv
 
-class Chat(models.Model):
-    participants = models.ManyToManyField(User)
-    created_at = models.DateTimeField(auto_now_add=True)
+load_dotenv()
 
-    def __str__(self):
-        return f"Chat between {', '.join([user.username for user in self.participants.all()])}"
+MONGODB_URI = os.getenv('MONGODB_URI')
+client = MongoClient(MONGODB_URI)
+db = client[os.getenv('MONGODB_NAME', 'test')]
 
-class Message(models.Model):
-    chat = models.ForeignKey(Chat, related_name='messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=[('sent', 'Sent'), ('received', 'Received'), ('read', 'Read')])
+class Chat:
+    def __init__(self, participants):
+        self.participants = participants
+        self.created_at = datetime.datetime.now()
 
-    def __str__(self):
-        return f"{self.sender.username}: {self.content} at {self.timestamp}"
+    def save(self):
+        chat_data = {
+            'participants': self.participants,
+            'created_at': self.created_at
+        }
+        chat_id = db.chats.insert_one(chat_data).inserted_id
+        return chat_id
+
+    @staticmethod
+    def get_all_chats():
+        return list(db.chats.find())
+
+    @staticmethod
+    def get_chat_by_id(chat_id):
+        return db.chats.find_one({"_id": ObjectId(chat_id)})
+    
+    
+class Message:
+    def __init__(self, chat_id, sender, content):
+        self.chat_id = chat_id  # Chat ID as a string
+        self.sender = sender      # Username of the sender
+        self.content = content    # Message content
+        self.timestamp = datetime.datetime.now()
+        self.status = 'sent'      # Default status
+
+    def save(self):
+        message_data = {
+            'chat_id': self.chat_id,
+            'sender': self.sender,
+            'content': self.content,
+            'timestamp': self.timestamp,
+            'status': self.status
+        }
+        message_id = db.messages.insert_one(message_data).inserted_id
+        return message_id
+
+    @staticmethod
+    def get_messages_by_chat_id(chat_id):
+        return list(db.messages.find({"chat_id": chat_id}))
