@@ -72,7 +72,21 @@ class ChatViewSet(viewsets.ViewSet):
         # Find all chats where the user is a participant
         chats = list(db.chats.find({'participants': user_id}))
         
+        chat_previews = []
         for chat in chats:
-            chat['_id'] = str(chat['_id'])
+            participants = chat['participants']
+            
+            other_participant = [p for p in participants if p != user_id]
+            
+            last_message = db.messages.find({'room_name': chat['room_name']}).sort('timestamp', -1).limit(1)
+            last_message_content = next(last_message, {}).get('content', '')
+            
+            chat_preview = {
+                'room_name': chat['room_name'],
+                'other_participant': other_participant[0] if other_participant else None,
+                'last_message_preview': last_message_content
+            }
+            
+            chat_previews.append(chat_preview)
         
         return Response(chats, status=status.HTTP_200_OK)
