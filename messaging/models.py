@@ -8,13 +8,15 @@ load_dotenv()
 
 MONGODB_URI = os.getenv('MONGODB_URI')
 client = MongoClient(MONGODB_URI)
-db = client[os.getenv('MONGODB_NAME', 'test')]
+db = client["test-database"]
 
 class Chat:
     def __init__(self, participants, creator):
         self.participants = participants
         self.creator = creator
         self.created_at = datetime.datetime.now()
+        self.chat_id = None
+        self.room_group_name = None
 
     def save(self):
         chat_data = {
@@ -22,8 +24,9 @@ class Chat:
             'creator': self.creator,
             'created_at': self.created_at
         }
-        chat_id = db.chats.insert_one(chat_data).inserted_id
-        return chat_id
+        result = db.chats.insert_one(chat_data)  # Insert into MongoDB
+        self.chat_id = str(result.inserted_id)
+        return self.chat_id
 
     @staticmethod
     def get_all_chats():
