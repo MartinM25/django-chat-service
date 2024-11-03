@@ -129,15 +129,17 @@ class ChatViewSet(viewsets.ViewSet):
             participants = chat['participants']
 
             other_participant = [p for p in participants if str(p) != str(user_id)]
-            
-            last_message = db.messages.find({'room_name': chat['room_name']}).sort('timestamp', -1).limit(1)
-            last_message_content = next(last_message, {}).get('content', 'No messages yet')
+
+            if not other_participant:
+                continue
+
+            last_message = db.messages.find({'chat_id': str(chat['_id'])}).sort('timestamp', -1).limit(1)
+            last_message_content = last_message[0]['content'] if last_message else 'No messages yet'
             
             chat_preview = {
-                'room_name': chat['room_name'],
-                'other_participant': other_participant[0] if other_participant else None,
+                'chat_id': str(chat['_id']),
+                'other_participant': str(other_participant[0]),
                 'last_message_preview': last_message_content,
-                'chat_id': str(chat['_id'])
             }
             
             chat_previews.append(chat_preview)
