@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from pymongo import MongoClient
 import os
 import uuid 
@@ -15,6 +16,7 @@ client = MongoClient(MONGODB_URI)
 db = client[os.getenv('MONGODB_NAME', 'test')]
 
 class ChatViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=['post'])
     def create(self, request):
@@ -62,3 +64,15 @@ class ChatViewSet(viewsets.ViewSet):
             message['_id'] = str(message['_id'])
         
         return Response(messages, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], url_path='user-chats')
+    def get_user_chats(self, request):
+        user_id = request.user.id 
+        
+        # Find all chats where the user is a participant
+        chats = list(db.chats.find({'participants': user_id}))
+        
+        for chat in chats:
+            chat['_id'] = str(chat['_id'])
+        
+        return Response(chats, status=status.HTTP_200_OK)
