@@ -25,6 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-default-jwt-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'messaging',
     'rest_framework',
+    'rest_framework_simplejwt',
     'channels',
 ]
 
@@ -82,6 +84,17 @@ CHANNEL_LAYERS = {
             "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379')],
         },
     },
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'SIGNING_KEY': JWT_SECRET_KEY,
+    'ALGORITHM': 'HS256',
 }
 
 # MongoDB configuration

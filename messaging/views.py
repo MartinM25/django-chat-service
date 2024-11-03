@@ -24,6 +24,8 @@ class ChatViewSet(viewsets.ViewSet):
         if not participants or len(participants) < 2:
             return Response({"error": "At least two participants are required."}, status=status.HTTP_400_BAD_REQUEST)
         
+        creator_id = request.user.id
+        
         # Generate a unique room name
         room_name = str(uuid.uuid4())
         
@@ -31,7 +33,8 @@ class ChatViewSet(viewsets.ViewSet):
         chat_data = {
             'participants': participants,
             'room_name': room_name,
-            'created_at': datetime.datetime.now()
+            'created_at': datetime.datetime.now(),
+            'creator': creator_id
         }
         
         result = db.chats.insert_one(chat_data)  # Insert into MongoDB
@@ -67,6 +70,13 @@ class ChatViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['get'], url_path='user-chats')
     def get_user_chats(self, request):
+        auth = get_authorization_header(request)
+        print(f'Authorization header: {auth}')
+        
+        if not request.user.is_authenticated:
+            print("User is not authenticated")
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+        
         user_id = request.user.id 
         
         # Find all chats where the user is a participant

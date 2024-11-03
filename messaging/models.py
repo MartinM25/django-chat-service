@@ -11,13 +11,15 @@ client = MongoClient(MONGODB_URI)
 db = client[os.getenv('MONGODB_NAME', 'test')]
 
 class Chat:
-    def __init__(self, participants):
+    def __init__(self, participants, creator):
         self.participants = participants
+        self.creator = creator
         self.created_at = datetime.datetime.now()
 
     def save(self):
         chat_data = {
             'participants': self.participants,
+            'creator': self.creator,
             'created_at': self.created_at
         }
         chat_id = db.chats.insert_one(chat_data).inserted_id
@@ -34,11 +36,11 @@ class Chat:
     
 class Message:
     def __init__(self, chat_id, sender, content):
-        self.chat_id = chat_id  # Chat ID as a string
-        self.sender = sender      # Username of the sender
-        self.content = content    # Message content
+        self.chat_id = chat_id
+        self.sender = sender
+        self.content = content
         self.timestamp = datetime.datetime.now()
-        self.status = 'sent'      # Default status
+        self.status = 'sent' 
 
     def save(self):
         message_data = {
